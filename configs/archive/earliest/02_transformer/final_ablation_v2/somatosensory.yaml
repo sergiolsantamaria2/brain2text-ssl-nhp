@@ -1,0 +1,47 @@
+# Final ablation — Transformer + Somatosensory SSL (~10h, Area 2/S1)
+# This is the KEY finding: S1 data transfers as well as M1 despite being
+# from a different cortical area, supporting the "universal cortical prior" hypothesis
+# HPs from sweep v2: lr=3e-3, wd=1e-4, ps5s5, head_type=none
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/final_ablation_v2/somatosensory}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  head_dim: 512
+  ssl_checkpoint: ${CHECKPOINT_DIR}/ssl_ablation_somatosensory/best.pt
+  head_type: none
+  head_num_blocks: 0
+
+weight_decay: 0.0001
+weight_decay_day: 0
+
+num_training_batches: 150000
+lr_scheduler_type: cosine
+lr_max: 0.003
+lr_max_day: 0.003
+lr_min: 0.00001
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 2000
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+save_val_logits: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: final_v2_somatosensory
+  group: final_ablation_v2
+  tags: ["transformer", "ssl", "final", "somatosensory", "S1", "universal_prior"]

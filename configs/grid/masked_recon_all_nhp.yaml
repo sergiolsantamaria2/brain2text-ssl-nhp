@@ -1,0 +1,79 @@
+# SSL Pretraining v2 — All NHP (~200h) WITH log_transform
+# =========================================================
+# Clean redo of ssl_pretrain_wd01 but with log_transform=true
+# so pretraining and finetuning see the same data distribution.
+#
+# Architecture: same as ssl_pretrain_wd01 (BIT Table 10)
+# Key change: log_transform applied BEFORE augmentation in the dataset
+#
+# Usage:
+# Usage: python scripts/pretrain.py --config <this-file>
+
+# ---- Data ----
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_pretrain
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true
+
+  window_bins: 500
+  patch_size: 5
+  min_session_bins: 100
+
+  batch_size: 64
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+
+  # CRITICAL: log_transform must match finetuning (sign(x) * log1p(|x|))
+  log_transform: true
+
+  # Data augmentation (BIT Table 10 — transformer values)
+  white_noise_std: 0.2
+  constant_offset_std: 0.05
+  gaussian_smooth_std: 2.0
+  gaussian_smooth_kernel_size: 11
+
+  num_workers: 0
+  pin_memory: true
+  min_subject_hours: 0.1
+
+# ---- Model (BIT Table 10) ----
+model:
+  embed_dim: 384
+  n_heads: 6
+  head_dim: 512
+  depth: 7
+  ff_dim: null
+  patch_size: 5
+  dropout: 0.2
+  attn_dropout: 0.4
+  bidirectional: true
+  positional_encoding: rope
+  mask_ratio: 0.5
+  max_mask_span: 15
+
+# ---- Training ----
+training:
+  optimizer: adamw
+  lr: 5.0e-4
+  weight_decay: 1.0e-5
+  n_epochs: 400
+  grad_clip: 10.0
+  lr_scheduler: cosine
+  warmup_epochs: 10
+  min_lr: 1.0e-6
+  save_every_epochs: 20
+  checkpoint_dir: ${CHECKPOINT_DIR}/ssl_v2_all_nhp_log
+  resume_from: null
+  val_every_epochs: 5
+  use_amp: true
+
+# ---- Logging ----
+wandb:
+  enabled: true
+  project: brain2text
+  group: ssl_pretrain_v2
+  run_name: ssl_v2_all_nhp_log
+
+gpu: 0

@@ -1,0 +1,48 @@
+# Phase 2 — Architecture sweep: patch=5/5, head=resffn2
+# *** IMPORTANT: Replace FILL_BEST_LR and FILL_BEST_WD with Phase 1 winners ***
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/tfs_p2/ps5s5_resffn2}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  head_dim: 512
+  ssl_checkpoint: ${CHECKPOINT_DIR}/ssl_pretrain_wd01/best.pt
+  head_type: resffn
+  head_num_blocks: 2
+  head_norm: layernorm
+  head_dropout: 0.2
+  head_activation: gelu
+
+weight_decay: 0.0001
+weight_decay_day: 0
+
+num_training_batches: 150000
+lr_scheduler_type: cosine
+lr_max: 0.003
+lr_max_day: 0.003
+lr_min: 0.00001
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 2000
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+save_val_logits: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: tfs_p2_ps5s5_resffn2
+  group: tfs_phase2_arch
+  tags: ["transformer", "ssl", "sweep", "phase2", "ps5s5", "resffn2"]

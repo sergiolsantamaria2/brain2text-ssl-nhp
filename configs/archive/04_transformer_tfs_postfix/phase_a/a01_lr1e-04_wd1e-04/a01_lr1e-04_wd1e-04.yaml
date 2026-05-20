@@ -1,0 +1,56 @@
+# Transformer TFS post-fix — Phase A: LR x WD screening
+# a01: lr=1.0e-04, wd=1.0e-04
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/tfs_postfix/a01_lr1e-04_wd1e-04}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  head_dim: 512
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  ssl_checkpoint: null
+  head_type: none
+  head_num_blocks: 0
+  input_speckle_p: 0.0
+  time_mask_ratio: 0.0
+  time_mask_max_span: 15
+
+dataset:
+  batch_size: 32
+  data_transforms:
+    white_noise_std: 0.0
+    constant_offset_std: 0.0
+
+epsilon: 1e-8
+weight_decay: 0.0001
+weight_decay_day: 0
+
+num_training_batches: 50000
+lr_scheduler_type: cosine
+lr_max: 0.0001
+lr_max_day: 0.0001
+lr_min: 3.3333333333333333e-06
+lr_min_day: 3.3333333333333333e-06
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 1000
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+early_stopping: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: tfs_pf_a01_lr1e-04_wd1e-04
+  group: tfs_t15_postfix_phaseA
+  tags: ["transformer", "tfs", "t15", "epsilon_fix", "phaseA"]

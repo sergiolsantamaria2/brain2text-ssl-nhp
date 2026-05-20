@@ -1,0 +1,7 @@
+# PER-only evaluation — no language model needed
+eval:
+  compute_wer: false
+  lm_dir: null
+  lm_dir_5gram: null
+
+torch_compile: false

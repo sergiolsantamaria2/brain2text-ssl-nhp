@@ -1,0 +1,92 @@
+# SSL Study — Contrastive Temporal (wav2vec 2.0 / SimCLR style) on Somatosensory (~10h, S1)
+# ============================================================================================
+# Intra-modal contrastive learning over neural patch embeddings.
+#
+# Positive pairs : temporally adjacent patches within the same trial (delta = 1 patch = 100 ms)
+# Negative pairs : patches from other trials in the batch (any time)
+# Loss           : symmetric InfoNCE with learnable temperature (CLIP style)
+#
+# This is the 10th and final technique of the systematic SSL study.
+# It mirrors the AR-binary-soma recipe (same data, batching, schedule), with the
+# contrastive-specific tweaks asked for by the advisor (lr=5e-4, wd=1e-5, warmup=10).
+#
+# Usage:
+# Usage: python scripts/pretrain.py --config <this-file>
+
+# ---- SSL Objective ----
+ssl_objective: contrastive_temporal
+
+# ---- Data ----
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_ablation/somatosensory
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true
+
+  window_bins: 500
+  patch_size: 5
+  min_session_bins: 100
+
+  # Contrastive benefits from larger batches (more negatives), but we start at 64
+  # to mirror the rest of the SSL study; revisit if memory allows.
+  batch_size: 64
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+
+  # No log_transform, no augmentation — same as AR binary soma. Positives come
+  # from temporal adjacency, not augmented views.
+  log_transform: false
+  white_noise_std: 0.0
+  constant_offset_std: 0.0
+  gaussian_smooth_std: 0.0
+  gaussian_smooth_kernel_size: 11
+
+  num_workers: 0
+  pin_memory: true
+  min_subject_hours: 0.1
+
+# ---- Model (same shared transformer as the rest of the SSL study) ----
+model:
+  embed_dim: 384
+  n_heads: 6
+  head_dim: 512
+  depth: 7
+  ff_dim: null
+  patch_size: 5
+  dropout: 0.3
+  attn_dropout: 0.5
+
+  # Contrastive-specific: shared MLP projector embed_dim -> 256 -> 128 (L2 norm)
+  proj_hidden_dim: 256
+  proj_out_dim: 128
+
+  # Learnable temperature (CLIP pattern: log_tau parameter, clamp on the exp)
+  tau_init: 0.1
+  tau_min: 0.01
+  tau_max: 1.0
+
+# ---- Training (advisor's contrastive recipe) ----
+training:
+  optimizer: adamw
+  lr: 5.0e-4
+  weight_decay: 1.0e-5
+  n_epochs: 200
+  grad_clip: 10.0
+  lr_scheduler: cosine
+  warmup_epochs: 10
+  min_lr: 1.0e-6
+  save_every_epochs: 20
+  checkpoint_dir: ${CHECKPOINT_DIR}/ssl_study/contrastive_temporal_soma
+  resume_from: null
+  val_every_epochs: 5
+  use_amp: true
+
+# ---- Logging ----
+wandb:
+  enabled: true
+  project: brain2text
+  group: ssl_study_contrastive
+  run_name: ssl_study_contrastive_temporal_soma
+
+gpu: 0

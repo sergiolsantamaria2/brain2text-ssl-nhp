@@ -1,0 +1,51 @@
+output_dir: ${oc.env:SLURM_TMPDIR,/tmp}/brain2text/trained_models/sweep_input_dropout_10k/gru_inpdo20
+checkpoint_dir: ${output_dir}/checkpoint
+
+num_training_batches: 10000
+lr_scheduler_type: cosine
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_max: 0.003
+lr_warmup_steps: 500
+lr_warmup_steps_day: 500
+
+batches_per_val_step: 500
+save_val_logits: false
+save_all_val_steps: false
+save_best_checkpoint: false
+save_final_model: false
+
+seed: 10
+dataset:
+  seed: 10
+
+model:
+  rnn_dropout: 0.4
+  input_network:
+    n_input_layers: 1
+    input_layer_sizes:
+    - 512
+    input_trainable: true
+    input_layer_dropout: 0.2
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: gru_inpdo20_seed10_10k
+  tags: ["sweep_input_dropout_10k", "gru", "cosine", "warmup500", "seed10", "input_layer_dropout=0.2"]
+
+eval:
+  compute_wer: true
+  wer_max_trials: 256
+  wer_every_val_steps: 1
+  wer_tag: "1gram"
+  lm_dir: "assets/lm/openwebtext_1gram_lm_sil"
+  acoustic_scale: 0.35
+  blank_penalty: 90.0
+  max_active: 7000
+  min_active: 200
+  beam: 15.0
+  lattice_beam: 8.0
+  ctc_blank_skip_threshold: 0.95
+  length_penalty: 0.0
+  nbest: 50

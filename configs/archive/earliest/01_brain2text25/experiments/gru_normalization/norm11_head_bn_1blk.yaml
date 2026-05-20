@@ -1,0 +1,21 @@
+output_dir: ${oc.env:JOB_OUT_DIR,${OUTPUT_DIR}/archive}/sweep_normalization_10k/norm11_head_bn_1blk
+checkpoint_dir: ${output_dir}/checkpoint
+
+num_training_batches: 10000
+seed: 10
+dataset:
+  seed: 10
+
+wandb:
+  enabled: true
+  project: brain2text
+  group: gru_normalization
+  run_name: norm11_head_bn_1blk_seed10_10k
+  tags: ["norm_sweep", "head", "bn", "1blk", "seed10", "10k"]
+
+model:
+  head_type: "resffn"
+  head_num_blocks: 1
+  head_norm: "bn"
+  head_dropout: 0.1
+  head_activation: "gelu"

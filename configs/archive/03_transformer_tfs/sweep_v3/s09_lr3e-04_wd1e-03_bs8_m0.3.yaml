@@ -1,0 +1,52 @@
+# Sweep v3 — lower LR + smaller BS combo
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/tfs_sweep_v3/s09_lr3e-04_wd1e-03_bs8_m0.3}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  head_dim: 512
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  ssl_checkpoint: null
+  head_type: none
+  head_num_blocks: 0
+  input_speckle_p: 0.0
+  time_mask_ratio: 0.3
+  time_mask_max_span: 15
+
+dataset:
+  batch_size: 8
+
+weight_decay: 0.001
+weight_decay_day: 0
+
+num_training_batches: 20000
+lr_scheduler_type: cosine
+lr_max: 0.0003
+lr_max_day: 0.0003
+lr_min: 0.00001000
+lr_min_day: 0.00001000
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 500
+lr_warmup_steps_day: 500
+
+batches_per_val_step: 1000
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+early_stopping: true
+early_stopping_val_steps: 10
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: tfs_s3_lr3e-04_wd1e-03_bs8_m0.3
+  group: tfs_sweep_v3
+  tags: ["transformer", "tfs", "sweep_v3"]

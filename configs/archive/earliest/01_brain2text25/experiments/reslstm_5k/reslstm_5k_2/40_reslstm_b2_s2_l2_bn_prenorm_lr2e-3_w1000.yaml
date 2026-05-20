@@ -1,0 +1,52 @@
+output_dir: trained_models/reslstm_5k_min/reslstm_b2_s2_l2_bn_prenorm_lr2e-3_w1000
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: reslstm
+  reslstm_num_blocks: 2
+  reslstm_sublayers_per_block: 2
+  reslstm_lstm_layers: 2
+  reslstm_lstm_dropout: 0.0
+  reslstm_norm: bn
+  reslstm_pre_norm: true
+  reslstm_residual_dropout: 0.0
+
+use_amp: false
+
+num_training_batches: 5000
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+
+lr_max: 0.002
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 500
+save_val_logits: false
+save_all_val_steps: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: reslstm_b2_s2_l2_bn_prenorm_lr2e-3_w1000
+  tags: ["reslstm_5k_min", "reslstm", "bn", "prenorm", "b2"]
+  group: reslstm_5k
+
+eval:
+  compute_wer: true
+  wer_max_trials: 64
+  wer_every_val_steps: 1
+  wer_tag: "1gram"
+  lm_dir: "assets/lm/openwebtext_1gram_lm_sil"
+  reorder_mode: "identity"
+  sil_index: 40
+
+  acoustic_scale: 0.35
+  blank_penalty: 90.0
+  max_active: 7000
+  min_active: 200
+  beam: 15.0
+  lattice_beam: 8.0
+  ctc_blank_skip_threshold: 0.95
+  length_penalty: 0.0
+  nbest: 50

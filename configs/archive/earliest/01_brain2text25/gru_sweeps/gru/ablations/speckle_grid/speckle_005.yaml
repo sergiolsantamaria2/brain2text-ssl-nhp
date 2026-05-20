@@ -1,0 +1,27 @@
+num_training_batches: 20000
+
+lr_scheduler_type: cosine
+lr_max: 0.0040
+lr_min: 0.0001333
+lr_decay_steps: ${num_training_batches}
+lr_warmup_steps: 500
+
+lr_max_day: 0.00133
+lr_min_day: 0.0001333
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps_day: 500
+
+weight_decay: 0.00001
+
+model:
+  input_speckle_p: 0.05
+  input_speckle_mode: "feature"
+
+output_dir: trained_models/ablations/speckle_grid/speckle_005
+checkpoint_dir: ${output_dir}/checkpoint
+
+wandb:
+  enabled: true
+  group: speckle_grid
+  run_name: speckle_005
+  tags: ["ablation", "speckle", "p005"]

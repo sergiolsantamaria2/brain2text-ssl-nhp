@@ -1,0 +1,18 @@
+# baseline: lr_max=0.0030
+num_training_batches: 20000
+lr_scheduler_type: cosine
+
+lr_max: 0.0030
+lr_min: 0.0001
+lr_decay_steps: ${num_training_batches}
+lr_warmup_steps: 500
+
+lr_max_day: 0.0010
+lr_min_day: 0.0001
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps_day: 500
+
+wandb:
+  group: lr_cosine
+  run_name: lr30
+  tags: ["lr_sweep", "cosine", "lr_max_0.0030", "baseline"]

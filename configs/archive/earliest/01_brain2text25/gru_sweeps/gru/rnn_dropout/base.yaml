@@ -1,0 +1,6 @@
+num_training_batches: 20000
+
+wandb:
+  group: rnn_dropout
+  run_name: base
+  tags: ["dropout_sweep", "base"]

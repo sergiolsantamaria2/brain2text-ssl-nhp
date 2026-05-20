@@ -1,0 +1,8 @@
+# rnn_dropout=0.10
+num_training_batches: 20000
+model:
+  rnn_dropout: 0.10
+wandb:
+  group: rnn_dropout
+  run_name: d10
+  tags: ["dropout_sweep", "rnn_dropout_0.10"]

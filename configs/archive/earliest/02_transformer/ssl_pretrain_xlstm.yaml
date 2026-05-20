@@ -1,0 +1,74 @@
+# SSL xLSTM Pretraining Configuration
+# =====================================
+# Pretraining del encoder xLSTM con datos NHP (sin humanos)
+# para estudiar transferencia NHP → humano (T15)
+#
+# Uso:
+#   sbatch scripts/run_ssl_pretrain_xlstm.sbatch
+
+# ---- Data ----
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_pretrain
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false          # Solo NHP — misma condición que el transformer SSL
+  human_use_only_tx: true
+
+  window_bins: 500              # 500 × 20ms = 10s por ventana
+  patch_size: 5                 # 5 bins = 100ms por patch → 100 patches por ventana
+  min_session_bins: 100
+
+  batch_size: 16            # Más pequeño que transformer (xLSTM usa más memoria)
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+
+  # Augmentación (igual que transformer SSL)
+  white_noise_std: 0.2
+  constant_offset_std: 0.05
+  gaussian_smooth_std: 2.0
+  gaussian_smooth_kernel_size: 11
+
+  num_workers: 2
+  pin_memory: true
+  min_subject_hours: 0.1
+
+# ---- Model ----
+model:
+  embed_dim: 512          # Dimensión de embedding (vs 384 del transformer — xLSTM más compacto)
+  n_blocks: 5             # Número de bloques sLSTM (vs 7 transformer layers)
+  n_heads: 4              # Número de cabezas sLSTM
+  conv1d_kernel_size: 4   # Kernel de la conv1d causal interna del sLSTM
+  dropout: 0.2
+  patch_size: 5           # Debe coincidir con data.patch_size
+  mask_ratio: 0.5         # 50% de patches enmascarados
+  max_mask_span: 15       # Máxima longitud de span continuo enmascarado
+  xlstm_backend: "vanilla"  # Usar vanilla (compatible con todas las GPUs)
+
+# ---- Training ----
+training:
+  optimizer: adamw
+  lr: 1.0e-4
+  weight_decay: 1.0e-5
+  n_epochs: 400
+  grad_clip: 1.0
+
+  lr_scheduler: cosine
+  warmup_epochs: 10
+  min_lr: 1.0e-6
+
+  save_every_epochs: 20
+  checkpoint_dir: ${CHECKPOINT_DIR}/ssl_pretrain_xlstm
+  
+  val_every_epochs: 5
+  val_metric: r2
+
+  use_amp: false
+
+# ---- Logging ----
+wandb:
+  enabled: true
+  project: brain2text
+  group: ssl_pretrain_xlstm
+  run_name: ssl_xlstm_nhp_v1
+
+gpu: 0

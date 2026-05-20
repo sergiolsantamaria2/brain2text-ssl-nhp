@@ -1,0 +1,38 @@
+# BIT-TFS sweep — low LR (1e-4)
+# No SSL pretraining: baseline transformer with BIT head_dim=512
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/transformer_sweep/transformer_lr_low}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  head_dim: 512
+  ssl_checkpoint: null
+
+num_training_batches: 400000
+lr_scheduler_type: cosine
+lr_max: 0.0001
+lr_max_day: 0.0001
+lr_min: 0.00001
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 2000
+save_best_checkpoint: true
+save_val_logits: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: transformer_lr_low
+  group: transformer_sweep
+  tags: ["transformer", "no_ssl", "sweep", "lr_low"]

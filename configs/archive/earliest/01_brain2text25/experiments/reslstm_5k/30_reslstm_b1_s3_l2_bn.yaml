@@ -1,0 +1,39 @@
+output_dir: trained_models/reslstm_5k/reslstm_b1_s3_l2_bn
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: reslstm
+  reslstm_num_blocks: 1
+  reslstm_sublayers_per_block: 3
+  reslstm_lstm_layers: 2
+  reslstm_lstm_dropout: 0.1
+  reslstm_norm: bn
+  reslstm_pre_norm: false
+  reslstm_residual_dropout: 0.0
+
+num_training_batches: 5000
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_max: 0.003
+lr_warmup_steps: 2000
+lr_warmup_steps_day: 2000
+
+batches_per_val_step: 500
+save_val_logits: false
+save_all_val_steps: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: reslstm5k_b1_s3_l2_bn
+  tags: ["reslstm_5k", "reslstm"]
+
+eval:
+  compute_wer: true
+  wer_max_trials: 64
+  wer_every_val_steps: 1
+  wer_tag: "1gram"
+  lm_dir: "assets/lm/openwebtext_1gram_lm_sil"
+
+
+use_amp: false

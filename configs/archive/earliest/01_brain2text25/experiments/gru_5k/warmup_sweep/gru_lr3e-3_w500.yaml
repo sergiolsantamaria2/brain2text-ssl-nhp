@@ -1,0 +1,37 @@
+output_dir: trained_models/lr_sweep_5k/gru_lr3e-3_w500_5k
+checkpoint_dir: ${output_dir}/checkpoint
+
+num_training_batches: 120000
+lr_scheduler_type: cosine
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+
+lr_max: 0.003
+lr_warmup_steps: 500
+lr_warmup_steps_day: 500
+
+batches_per_val_step: 500
+save_val_logits: false
+save_all_val_steps: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: gru_lr3e-3_w500_5k
+  tags: ["lr_sweep_5k", "gru", "cosine", "warmup500"]
+
+eval:
+  compute_wer: true
+  wer_max_trials: 256
+  wer_every_val_steps: 1
+  wer_tag: "1gram"
+  lm_dir: "assets/lm/openwebtext_1gram_lm_sil"
+  acoustic_scale: 0.35
+  blank_penalty: 90.0
+  max_active: 7000
+  min_active: 200
+  beam: 15.0
+  lattice_beam: 8.0
+  ctc_blank_skip_threshold: 0.95
+  length_penalty: 0.0
+  nbest: 50

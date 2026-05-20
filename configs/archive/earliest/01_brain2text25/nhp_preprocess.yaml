@@ -1,0 +1,27 @@
+# NHP Preprocessing Pipeline Configuration
+# ==========================================
+# Follows BIT paper (2511.21740v2) Appendix A.3
+
+# Data paths
+monkey_data_root: ${DATA_DIR}/monkey_data
+output_dir: ${DATA_DIR}/nhp_pretrain
+
+# Binning
+bin_size_ms: 20.0  # 20ms bins as per BIT paper
+
+# Z-scoring across days (critical for Utah array non-stationarity)
+zscore_across_sessions: true
+zscore_eps: 1.0e-6
+
+# Dead channel policy (BIT A.3)
+# <2 dead → interpolate with temporal mean
+# >2 dead → exclude session
+max_dead_channels: 96
+min_spikes_alive: 10
+interpolate_dead: true
+
+# Skip very short sessions
+min_session_duration_s: 30.0
+
+# Logging
+log_level: INFO

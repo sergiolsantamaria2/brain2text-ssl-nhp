@@ -1,0 +1,7 @@
+eval:
+  compute_wer: true
+  wer_tag: "1gram"
+  wer_every_val_steps: 1
+  wer_max_trials: 64
+  lm_dir: ${PROJECT_ROOT}/lm/openwebtext_1gram_lm_sil
+  lm_dir_5gram: null

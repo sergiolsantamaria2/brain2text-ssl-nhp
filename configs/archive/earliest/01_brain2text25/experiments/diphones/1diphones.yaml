@@ -1,0 +1,17 @@
+# Diphone with extended training
+# 1601 classes needs more batches than 41 classes
+
+num_training_batches: 100000
+
+use_diphones: true
+
+output_dir: trained_models/diphones/diphone_40k
+checkpoint_dir: ${output_dir}/checkpoint
+
+wandb:
+  enabled: true
+  group: diphones vs no diphones
+  run_name: Diphones
+  tags: ["diphones", "dcond", "gru", "40k"]
+
+save_val_logits: false

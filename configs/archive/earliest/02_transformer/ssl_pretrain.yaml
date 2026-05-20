@@ -1,0 +1,89 @@
+# SSL Pretraining Configuration
+# ================================
+# Follows BIT paper (2511.21740v2) Appendix Q & R
+#
+# Usage:
+#   python scripts/ssl_pretrain.py --config configs/ssl_pretrain.yaml
+
+# ---- Data ----
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_pretrain
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true  # Only thresholded spikes (256ch) for consistency with NHP
+
+  # Window sampling
+  window_bins: 500          # 500 × 20ms = 10s windows
+  patch_size: 5             # 5 bins = 100ms per patch → 100 patches per window
+  min_session_bins: 100     # Skip sessions < 2s
+
+  # Batching
+  batch_size: 64 #Windows
+  n_batches_per_epoch: 1000 #Simplemente define cuando hacemos validación
+  val_fraction: 0.1 #10% de las sesiones de cada usuario se usan para validación
+  seed: 42
+
+  # Data augmentation (BIT Table 10)
+  white_noise_std: 0.2
+  constant_offset_std: 0.05
+  gaussian_smooth_std: 2.0
+  gaussian_smooth_kernel_size: 11
+
+  # Workers -> directly from paper
+  num_workers: 0
+  pin_memory: true
+
+  # Filtering
+  min_subject_hours: 0.1 #sujetos con sesiones de menos de 6mins se descartan para el pretraining
+
+# ---- Model (Transformer Encoder, BIT Table 10) ----
+model:
+  embed_dim: 384            # Embedding dimension -> dimensión de cad token tras el patch embedding
+  n_heads: 6                # Number of attention heads
+  head_dim: 512             # BIT Table 10: per-head Q/K/V dimension (overrides embed_dim//n_heads)
+  depth: 7                  # Number of transformer blocks
+  ff_dim: null              # FFN hidden dim (null = 4 * embed_dim = 1536)
+  patch_size: 5             # Must match data.patch_size
+  dropout: 0.2
+  attn_dropout: 0.4
+  bidirectional: true       # Bidirectional attention mask
+  positional_encoding: rope # RoPE positional embeddings
+
+  # Masking for SSL (done in model)
+  mask_ratio: 0.5           # Fraction of patches to mask -> Se enmascara el 50% de los patches durante pretrining
+  max_mask_span: 15         # Maximum contiguous mask span (in patches)
+
+# ---- Training (BIT Appendix R) ----
+training:
+  optimizer: adamw
+  lr: 5.0e-4
+  weight_decay: 1.0e-5
+  n_epochs: 400
+  grad_clip: 10.0 # si el gradiente supera norma 10, se recorta. Previene explosiones de gradiente
+
+  # LR scheduler
+  lr_scheduler: cosine
+  warmup_epochs: 10
+  min_lr: 1.0e-6
+
+  # Checkpointing
+  save_every_epochs: 20
+  checkpoint_dir: checkpoints/ssl_pretrain
+  resume_from: null
+
+  # Validation
+  val_every_epochs: 5
+  val_metric: r2            # R² for reconstruction quality
+
+  # Mixed precision
+  use_amp: true
+
+# ---- Logging ----
+wandb:
+  enabled: true
+  project: brain2text
+  group: ssl_pretrain
+  run_name: ${oc.env:WANDB_RUN_NAME,ssl_pretrain_v1}
+
+# GPU
+gpu: 0

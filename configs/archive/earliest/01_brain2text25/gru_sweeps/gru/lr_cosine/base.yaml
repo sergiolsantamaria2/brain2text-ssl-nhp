@@ -1,0 +1,6 @@
+num_training_batches: 20000
+
+wandb:
+  group: lr_cosine
+  run_name: base
+  tags: ["lr_sweep", "base"]

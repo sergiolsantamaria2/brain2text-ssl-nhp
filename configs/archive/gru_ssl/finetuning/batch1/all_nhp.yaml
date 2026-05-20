@@ -1,0 +1,22 @@
+# GRU finetuning with SSL pretrained weights (All NHP)
+# v3: LayerNorm bridge + selective layer loading + full LR
+# Short run (30k batches) for quick evaluation
+
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/gru_ssl_ft/all_nhp}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: gru
+  gru_ssl_checkpoint: ${CHECKPOINT_DIR}/gru_ssl_all_nhp/best.pt
+  gru_ssl_layernorm: true
+  gru_ssl_skip_first_layer: true
+
+# Short run for quick triage
+num_training_batches: 30000
+early_stopping_val_steps: 10
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: gru_ssl_ft_all_nhp
+  group: gru_ssl_finetune_v3

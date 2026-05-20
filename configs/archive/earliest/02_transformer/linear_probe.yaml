@@ -1,0 +1,39 @@
+# Linear Probe Configuration
+# ===========================
+# Evaluates SSL pretraining quality by training a single linear CTC layer
+# on top of a frozen SSLTransformerEncoder.
+#
+# Usage:
+#   python scripts/linear_probe.py \
+#       --ssl_checkpoint ${CHECKPOINT_DIR}/best.pt \
+#       --config configs/linear_probe.yaml
+
+ssl_checkpoint: ${CHECKPOINT_DIR}/ssl_pretrain/best.pt
+
+model:
+  embed_dim: 384          # Must match SSL checkpoint
+  n_heads: 6              # Must match SSL checkpoint
+  # head_dim and depth are auto-inferred from the checkpoint state dict
+  n_classes: 41           # Phoneme classes (40 phonemes + 1 CTC blank at index 0)
+  patch_size: 5           # Must match SSL pretraining (5 bins = 100ms per patch)
+
+data:
+  # B2T_DATA_DIR env var overrides this path (set by sbatch script)
+  dataset_dir: ${oc.env:B2T_DATA_DIR,${DATA_DIR}/hdf5_data_final}
+  batch_size: 32
+  seed: 42
+
+training:
+  n_epochs: 100
+  lr: 1.0e-3
+  use_amp: true           # bfloat16 autocast on GPU
+  eval_every: 5           # compute val PER every N epochs
+
+wandb:
+  enabled: true
+  project: brain2text
+  group: linear_probe
+  run_name: linear_probe_v1
+
+# JOB_OUT_DIR env var overrides this (set by sbatch script → /scratch)
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/linear_probe}

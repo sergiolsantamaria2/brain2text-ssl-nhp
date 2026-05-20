@@ -1,0 +1,43 @@
+# Phase 1 — Optimizer sweep: LR=0.0005, WD=0.05
+# Architecture fixed at BIT defaults (ps=5, st=5, hd512, no head)
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/tfs_p1/lr5e-4_wd5e-2}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  head_dim: 512
+  ssl_checkpoint: ${CHECKPOINT_DIR}/ssl_pretrain_wd01/best.pt
+
+weight_decay: 0.05
+weight_decay_day: 0
+
+num_training_batches: 150000
+lr_scheduler_type: cosine
+lr_max: 0.0005
+lr_max_day: 0.0005
+lr_min: 0.00001
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 2000
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+save_val_logits: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: tfs_p1_lr5e-4_wd5e-2
+  group: tfs_phase1_optim
+  tags: ["transformer", "ssl", "sweep", "phase1", "lr_5e-4", "wd_5e-2"]

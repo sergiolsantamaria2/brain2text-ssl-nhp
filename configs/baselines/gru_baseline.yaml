@@ -1,0 +1,31 @@
+# GRU Baseline — BEST result (PER=0.0978)
+# ==========================================
+# This is the exact config that produced the competition-winning result.
+# W&B run: gru_per_focused, val/PER=0.09784 at step 70000
+# Checkpoint: /ssl_ablation_gru/gru_per_focused/checkpoint
+#
+# Base: rnn_args.yaml with these overrides:
+#   - num_training_batches: 120000 (vs 100000)
+#   - torch_compile: false (vs true)
+#
+# Usage:
+# Usage: python scripts/pretrain.py --config <this-file>
+#
+# This serves as the baseline for all GRU SSL experiments.
+# Any SSL pretraining result must beat PER=0.0978 to be meaningful.
+
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/gru_baseline_best}
+checkpoint_dir: ${output_dir}/checkpoint
+
+num_training_batches: 120000
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+
+torch_compile: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: gru_baseline_best
+  group: gru_ssl_finetune
+  tags: ["gru", "baseline", "no_ssl", "best"]

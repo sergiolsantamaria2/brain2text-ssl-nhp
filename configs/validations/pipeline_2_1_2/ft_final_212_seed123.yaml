@@ -1,0 +1,69 @@
+# Phase C1 — Stage 3: Final FT on T15 from the 2-1-2 SSL checkpoint, seed=123.
+# ============================================================================
+# Direct comparison against the SSL→FT control (seed 123 = 0.0925).
+# Identical config to ssl_study_ar_binary_250k_multiseed seed123 EXCEPT
+# ssl_checkpoint points to the 2-1-2 SSL output (Stage 2) instead of the
+# random-init AR-binary-soma checkpoint.
+
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/phase_c1_212/ft_final_212_seed123}
+checkpoint_dir: ${output_dir}/checkpoint
+
+use_ema: false
+seed: 123
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  head_dim: 512
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  ssl_checkpoint: ${CHECKPOINT_DIR}/phase_c1_212/ssl_from_ft/epoch_0400.pt
+  head_type: resffn
+  head_num_blocks: 1
+  head_norm: layernorm
+  head_dropout: 0.1
+  head_activation: gelu
+  input_speckle_p: 0.0
+  time_mask_ratio: 0.0
+  time_mask_max_span: 15
+
+dataset:
+  batch_size: 32
+  seed: 123
+  data_transforms:
+    white_noise_std: 0.8
+    constant_offset_std: 0.2
+    log_transform: true
+
+epsilon: 1e-8
+weight_decay: 0.0005
+weight_decay_day: 0
+
+num_training_batches: 250000
+lr_scheduler_type: cosine
+lr_max: 0.0003
+lr_max_day: 0.0003
+lr_min: 1e-06
+lr_min_day: 1e-06
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 5000
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+early_stopping: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: phase_c1_212_ft_final_seed123
+  group: phase_c1_212_ft250k
+  tags: ["phase_c1", "212", "stage3", "ft_final", "t15", "seed123"]

@@ -1,0 +1,43 @@
+# Extended training — best Phase 1 config (lr=0.001, wd=0.005) for 300k steps
+# Cosine schedule decays more slowly over 300k, allowing further convergence
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/tfs_ext/lr1e-3_wd5e-3_300k}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  head_dim: 512
+  ssl_checkpoint: ${CHECKPOINT_DIR}/ssl_pretrain_wd01/best.pt
+
+weight_decay: 0.005
+weight_decay_day: 0
+
+num_training_batches: 300000
+lr_scheduler_type: cosine
+lr_max: 0.001
+lr_max_day: 0.001
+lr_min: 0.00001
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 2000
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+save_val_logits: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: tfs_ext_lr1e-3_wd5e-3_300k
+  group: tfs_extended
+  tags: ["transformer", "ssl", "extended", "lr_1e-3", "wd_5e-3", "300k"]

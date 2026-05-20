@@ -1,0 +1,76 @@
+# SSL Pretrain — Lower WD (0.01 vs our 0.1)
+# Middle ground between BIT's 1e-5 and our aggressive 0.1
+# Hypothesis: WD=0.1 may be over-regularizing, 0.01 may find better balance
+# Compare with: ssl_pretrain_wd01.yaml (WD=0.1, Val R²=0.16)
+# Also compare with original ssl_pretrain.yaml (WD=1e-5, Val R²=0.10)
+
+# ---- Data (IDENTICAL to ssl_pretrain_wd01) ----
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_pretrain
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true
+
+  window_bins: 500
+  patch_size: 5
+  min_session_bins: 100
+
+  batch_size: 64
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+
+  white_noise_std: 0.2
+  constant_offset_std: 0.05
+  gaussian_smooth_std: 2.0
+  gaussian_smooth_kernel_size: 11
+
+  num_workers: 0
+  pin_memory: true
+  min_subject_hours: 0.1
+
+# ---- Model (IDENTICAL to ssl_pretrain_wd01) ----
+model:
+  embed_dim: 384
+  n_heads: 6
+  head_dim: 512
+  depth: 7
+  ff_dim: null
+  patch_size: 5
+  dropout: 0.3
+  attn_dropout: 0.5
+  bidirectional: true
+  positional_encoding: rope
+
+  mask_ratio: 0.5
+  max_mask_span: 15
+
+# ---- Training ----
+training:
+  optimizer: adamw
+  lr: 1.0e-3
+  weight_decay: 0.01             # KEY CHANGE: WD=0.01 (vs 0.1)
+  n_epochs: 400
+  grad_clip: 10.0
+
+  lr_scheduler: cosine
+  warmup_epochs: 20
+  min_lr: 1.0e-6
+
+  save_every_epochs: 20
+  checkpoint_dir: ${CHECKPOINT_DIR}/ssl_wd001
+  resume_from: null
+
+  val_every_epochs: 5
+  val_metric: r2
+
+  use_amp: true
+
+# ---- Logging ----
+wandb:
+  enabled: true
+  project: brain2text
+  group: ssl_pretraining_sweep
+  run_name: ssl_wd_001
+
+gpu: 0
