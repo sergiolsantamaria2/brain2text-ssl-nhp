@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brain2text-ssl-nhp"
+version = "0.1.0"
+description = "Cross-species self-supervised pretraining for intracortical speech decoding."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "sergiolsantamaria2" }]
+keywords = ["brain-computer-interface", "speech-decoding", "self-supervised-learning", "transformer", "neural-decoding"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy<2",
+    "scipy>=1.11",
+    "pandas>=2.1",
+    "torch>=2.0",
+    "torchaudio>=2.0",
+    "h5py>=3.10",
+    "tqdm>=4.66",
+    "omegaconf>=2.3",
+    "PyYAML>=6.0",
+    "editdistance>=0.8",
+    "g2p_en>=2.1",
+    "matplotlib>=3.8",
+    "wandb>=0.16",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "black>=24.0",
+    "ruff>=0.3",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,54 @@
+# GRU SSL — Somatosensory only (chowdhury_2020, Area 2/S1, ~10h)
+# KEY EXPERIMENT: confirms "universal cortical prior" with GRU (not just transformer)
+
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_ablation/somatosensory
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true
+  window_bins: 500
+  patch_size: 1
+  min_session_bins: 100
+  batch_size: 64
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+  white_noise_std: 0.8
+  constant_offset_std: 0.2
+  gaussian_smooth_std: 2.0
+  gaussian_smooth_kernel_size: 11
+  num_workers: 0
+  pin_memory: true
+  min_subject_hours: 0.1
+
+model:
+  gru_input_size: 7168
+  n_units: 768
+  n_layers: 5
+  rnn_dropout: 0.3
+  patch_size: 14
+  patch_stride: 4
+  n_predict_steps: 3
+
+training:
+  optimizer: adamw
+  lr: 1.0e-3
+  weight_decay: 0.1
+  n_epochs: 400            # More epochs for small dataset
+  grad_clip: 10.0
+  lr_scheduler: cosine
+  warmup_epochs: 20
+  min_lr: 1.0e-6
+  save_every_epochs: 20
+  checkpoint_dir: ${CHECKPOINT_DIR}/gru_ssl_somatosensory
+  resume_from: null
+  val_every_epochs: 5
+  use_amp: true
+
+wandb:
+  enabled: true
+  project: brain2text
+  group: gru_ssl
+  run_name: gru_ssl_somatosensory
+
+gpu: 0

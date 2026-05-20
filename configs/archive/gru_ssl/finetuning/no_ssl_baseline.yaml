@@ -1,0 +1,14 @@
+# GRU finetuning WITHOUT SSL pretraining (baseline for fair comparison)
+# Same config as base rnn_args.yaml but with explicit output/wandb for the ablation
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/gru_ssl_ft/no_ssl}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: gru
+  # No gru_ssl_checkpoint — trains from scratch
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: gru_ssl_ft_no_ssl
+  group: gru_ssl_finetune

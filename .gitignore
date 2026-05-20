@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project artifacts — anchored to repo root so they don't collide with
+# package paths like src/brain2text/data/
+/wandb/
+/checkpoints/
+/trained_models/
+/outputs/
+/logs/
+/data/
+*.log
+*.pt
+*.ckpt
+*.h5
+*.hdf5
+*.mat
+*.nwb
+
+# Notebook artifacts
+.ipynb_checkpoints/
+
+# Local environment overrides
+.env
+.env.local

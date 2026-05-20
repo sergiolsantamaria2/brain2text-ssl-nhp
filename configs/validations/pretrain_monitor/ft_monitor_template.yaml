@@ -1,0 +1,70 @@
+# Pretrain monitoring — quick finetuning (50k batches) from SSL checkpoint
+# ========================================================================
+# Template config. Used by scripts/run_pretrain_monitor.py which overrides:
+#   model.ssl_checkpoint  — path to specific pretraining checkpoint
+#   wandb.run_name        — monitor_{dataset}_{epoch}
+#   wandb.group           — pretrain_monitor
+#   output_dir            — per-checkpoint output directory
+#
+# Based on h03 (best TFS: PER=0.0992) but with 50k batches instead of 200k.
+# Purpose: NOT to get best PER, but to get COMPARABLE PER across checkpoints.
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/pretrain_monitor/default}
+checkpoint_dir: ${output_dir}/checkpoint
+
+use_ema: false
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  head_dim: 512
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  ssl_checkpoint: null  # overridden by run_pretrain_monitor.py
+  head_type: resffn
+  head_num_blocks: 1
+  head_norm: layernorm
+  head_dropout: 0.1
+  head_activation: gelu
+  input_speckle_p: 0.0
+  time_mask_ratio: 0.0
+  time_mask_max_span: 15
+
+dataset:
+  batch_size: 32
+  data_transforms:
+    white_noise_std: 0.8
+    constant_offset_std: 0.2
+    log_transform: true
+
+epsilon: 1e-8
+weight_decay: 0.0005
+weight_decay_day: 0
+
+num_training_batches: 50000
+lr_scheduler_type: cosine
+lr_max: 0.0003
+lr_max_day: 0.0003
+lr_min: 1e-06
+lr_min_day: 1e-06
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 500
+lr_warmup_steps_day: 500
+
+batches_per_val_step: 5000
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+early_stopping: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: monitor_default  # overridden by run_pretrain_monitor.py
+  group: pretrain_monitor
+  tags: ["transformer", "ssl_v2", "pretrain_monitor", "quick_ft"]

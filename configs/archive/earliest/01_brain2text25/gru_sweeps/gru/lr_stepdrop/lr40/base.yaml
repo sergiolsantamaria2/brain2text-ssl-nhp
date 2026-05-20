@@ -1,0 +1,26 @@
+num_training_batches: 20000
+
+lr_scheduler_type: cosine
+lr_max: 0.0040
+lr_min: 0.0001333
+lr_decay_steps: ${num_training_batches}
+lr_warmup_steps: 500
+
+lr_max_day: 0.00133
+lr_min_day: 0.0001333
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps_day: 500
+
+output_dir: trained_models/lr_stepdrop/lr40/base
+checkpoint_dir: ${output_dir}/checkpoint
+
+save_all_val_steps: false
+save_val_logits: false
+save_final_model: false
+save_best_checkpoint: true
+
+wandb:
+  enabled: true
+  group: lr_stepdrop_lr40
+  run_name: base
+  tags: ["lr_stepdrop", "lr40", "base", "cosine", "T=20k"]

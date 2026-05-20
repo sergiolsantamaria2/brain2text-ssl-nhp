@@ -1,0 +1,38 @@
+# Transformer finetuning from random init (no SSL pretraining)
+# Baseline for comparing against SSL-pretrained transformer
+# Uses head_dim=512 to match the corrected SSL pretraining config
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/ssl_ablation/transformer_no_ssl_hd512}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  head_dim: 512
+  ssl_checkpoint: null
+
+num_training_batches: 400000
+lr_scheduler_type: cosine
+lr_max: 0.002
+lr_min: 0.00001
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 2000
+save_best_checkpoint: true
+save_val_logits: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: transformer_no_ssl_hd512
+  group: ssl_ablation
+  tags: ["transformer", "no_ssl", "per_only", "random_init", "hd512"]

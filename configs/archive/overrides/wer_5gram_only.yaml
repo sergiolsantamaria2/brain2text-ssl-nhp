@@ -1,0 +1,7 @@
+eval:
+  compute_wer: true
+  lm_dir: data/lm/languageModel
+  lm_dir_5gram: null
+  wer_tag: "5gram"
+  wer_every_val_steps: 1
+  wer_max_trials: 256

@@ -1,0 +1,40 @@
+# Transformer finetuning with causal SSL checkpoint
+# Compare with transformer_with_ssl_wd01.yaml (masked SSL)
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/ssl_causal/transformer_with_causal_ssl}
+checkpoint_dir: ${output_dir}/checkpoint
+
+model:
+  decoder_type: transformer
+  embed_dim: 384
+  n_heads: 6
+  n_layers: 7
+  ff_dim: null
+  attn_dropout: 0.4
+  rnn_dropout: 0.2
+  patch_size: 5
+  patch_stride: 5
+  head_dim: 512
+  ssl_checkpoint: ${CHECKPOINT_DIR}/ssl_causal_wd01/best.pt
+
+# NOTE: TransformerDecoder._load_ssl_weights() only loads blocks.* and final_norm.*
+# These have IDENTICAL format between masked and causal SSL, so no code change needed.
+
+num_training_batches: 400000
+lr_scheduler_type: cosine
+lr_max: 0.002
+lr_min: 0.00001
+lr_decay_steps: ${num_training_batches}
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps: 1000
+lr_warmup_steps_day: 1000
+
+batches_per_val_step: 2000
+save_best_checkpoint: true
+save_val_logits: false
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: transformer_with_causal_ssl
+  group: ssl_causal
+  tags: ["transformer", "causal_ssl", "per_only", "pretrained"]

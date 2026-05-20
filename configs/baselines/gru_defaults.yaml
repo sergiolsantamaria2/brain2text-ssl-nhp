@@ -1,0 +1,239 @@
+#configs/rnn_args.yaml
+
+model:
+  n_input_features: 512 # number of input features in the neural data. (2 features per electrode, 256 electrodes)
+  n_units: 768 # number of units per GRU layer
+  rnn_dropout: 0.4
+  rnn_trainable: true # whether the GRU layers are trainable
+  n_layers: 5 # number of GRU layers
+  decoder_type: gru
+
+  patch_size: 14 # size of the input patches (14 time steps)
+  patch_stride: 4 # stride for the input patches (4 time steps)
+
+  # Input network (day-specific)
+  input_network:
+    n_input_layers: 1 # number of input layers per network (one network for each day)
+    input_layer_sizes:
+    - 512 # size of the input layer (number of input features)
+    input_trainable: true # whether the input layer is trainable
+    input_layer_dropout: 0.2 # dropout rate for the input layer
+
+  # --- Explicit "new" model params (to avoid relying on constructor defaults) ---
+  # Optional head (kept OFF in baseline)
+  head_type: "resffn"
+  head_num_blocks: 1
+  head_norm: "layernorm"
+  head_dropout: 0.1
+  head_activation: "gelu"
+
+  # Speckled masking (coordinated dropout) - OPTIMAL setting you reported
+  input_speckle_p: 0.10
+  input_speckle_mode: "feature"
+
+  # If present in your GRU signature (otherwise harmless if ignored by OmegaConf in your setup)
+  d_model: 0
+
+
+gpu_number: '0' # GPU number to use for training, formatted as a string (e.g., '0', '1', etc.)
+mode: train
+use_amp: true # whether to use automatic mixed precision (AMP) for training
+
+# Output dir can be forced per job/run via env var JOB_OUT_DIR
+output_dir: ${oc.env:JOB_OUT_DIR,trained_models/dev_run}
+checkpoint_dir: ${output_dir}/checkpoint
+init_from_checkpoint: false # whether to initialize the model from a checkpoint
+init_checkpoint_path: None # path of the checkpoint to initialize the model from, if any
+
+# Keep disk usage conservative by default
+save_best_checkpoint: true
+save_all_val_steps: false
+save_final_model: false
+save_val_metrics: true
+early_stopping: false
+early_stopping_val_steps: 20
+
+# --- OPTIMAL LR regime from sweeps ---
+# Best run (gru_per_focused): PER=0.0978 with 120k batches
+num_training_batches: 120000
+lr_scheduler_type: cosine
+lr_max: 0.0040
+lr_min: 0.0001333
+lr_decay_steps: ${num_training_batches}
+lr_warmup_steps: 500
+
+lr_max_day: 0.00133
+lr_min_day: 0.0001333
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps_day: 500
+
+beta0: 0.9
+beta1: 0.999
+epsilon: 0.1
+weight_decay: 0.001
+weight_decay_day: 0
+seed: 10
+grad_norm_clip_value: 5
+
+batches_per_train_log: 200
+batches_per_val_step: 500
+
+batches_per_save: 0
+log_individual_day_val_PER: true
+log_val_skip_logs: false
+save_val_logits: false
+save_val_data: false
+
+dataset:
+  data_transforms:
+    white_noise_std: 1.0
+    constant_offset_std: 0.2
+    random_walk_std: 0.0
+    random_walk_axis: -1
+    static_gain_std: 0.0
+    random_cut: 3
+    smooth_kernel_size: 100
+    smooth_data: true
+    smooth_kernel_std: 2
+    feature_norm: "none"          # none | batch_zscore | instance_zscore
+    feature_norm_eps: 1e-5
+
+  neural_dim: 512
+  batch_size: 32
+  n_classes: 41
+  max_seq_elements: 500
+  days_per_batch: 4
+  seed: 10
+  num_dataloader_workers: 1
+  loader_shuffle: false
+  must_include_days: null
+  test_percentage: 0.1
+  feature_subset: null
+
+  dataset_dir: ${DATA_DIR}/hdf5_data_final
+  bad_trials_dict: null
+
+  sessions:
+  - t15.2023.08.11
+  - t15.2023.08.13
+  - t15.2023.08.18
+  - t15.2023.08.20
+  - t15.2023.08.25
+  - t15.2023.08.27
+  - t15.2023.09.01
+  - t15.2023.09.03
+  - t15.2023.09.24
+  - t15.2023.09.29
+  - t15.2023.10.01
+  - t15.2023.10.06
+  - t15.2023.10.08
+  - t15.2023.10.13
+  - t15.2023.10.15
+  - t15.2023.10.20
+  - t15.2023.10.22
+  - t15.2023.11.03
+  - t15.2023.11.04
+  - t15.2023.11.17
+  - t15.2023.11.19
+  - t15.2023.11.26
+  - t15.2023.12.03
+  - t15.2023.12.08
+  - t15.2023.12.10
+  - t15.2023.12.17
+  - t15.2023.12.29
+  - t15.2024.02.25
+  - t15.2024.03.03
+  - t15.2024.03.08
+  - t15.2024.03.15
+  - t15.2024.03.17
+  - t15.2024.04.25
+  - t15.2024.04.28
+  - t15.2024.05.10
+  - t15.2024.06.14
+  - t15.2024.07.19
+  - t15.2024.07.21
+  - t15.2024.07.28
+  - t15.2025.01.10
+  - t15.2025.01.12
+  - t15.2025.03.14
+  - t15.2025.03.16
+  - t15.2025.03.30
+  - t15.2025.04.13
+
+  dataset_probability_val:
+  - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+
+wandb:
+  enabled: true
+  project: brain2text
+  group: ${oc.env:WANDB_RUN_GROUP,null}
+  job_type: ${oc.env:WANDB_JOB_TYPE,null}
+  run_name: ${oc.env:WANDB_RUN_NAME,null}
+
+eval:
+  compute_wer: true
+  lm_dir: data/lm/openwebtext_1gram_lm_sil
+  lm_dir_5gram: null
+  reorder_mode: identity
+  wer_tag: "1gram"
+  wer_every_val_steps: 1
+  wer_max_trials: 1024
+  max_active: 7000
+  min_active: 200
+  beam: 15.0
+  lattice_beam: 8.0
+  ctc_blank_skip_threshold: 0.95
+  length_penalty: 0.0
+  acoustic_scale: 0.35
+  nbest: 50
+  blank_penalty: 90.0
+  sil_index: 40
+
+# torch_compile=false in best run (gru_per_focused, PER=0.0978)
+torch_compile: false
+
+use_diphones: false

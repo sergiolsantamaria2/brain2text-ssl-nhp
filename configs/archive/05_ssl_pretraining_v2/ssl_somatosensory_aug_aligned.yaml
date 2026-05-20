@@ -1,0 +1,85 @@
+# SSL Pretraining v2 — Somatosensory AUG-ALIGNED with finetuning
+# =============================================================================
+# Same as ssl_somatosensory_log.yaml but with AGGRESSIVE augmentation
+# matching the finetuning pipeline (white_noise=0.8, offset=0.2).
+#
+# HYPOTHESIS: The mismatch between mild aug at pretraining (0.2 / 0.05) and
+# aggressive aug at finetuning (0.8 / 0.2) is breaking transfer. The encoder
+# learns features that are not robust to the noise level seen at finetuning,
+# so the pretrained weights drift quickly during finetuning and act like a
+# poor random init.
+#
+# Used together with the staged sbatch (run_aug_aligned_staged.sbatch) which
+# interleaves pretraining + 30k monitoring finetuning in a single SLURM job.
+#
+# Usage:
+#   sbatch scripts/run_aug_aligned_staged.sbatch
+
+# ---- Data ----
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_ablation/somatosensory
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true
+
+  window_bins: 500
+  patch_size: 5
+  min_session_bins: 100
+
+  batch_size: 64
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+
+  # CRITICAL: log_transform must match finetuning (sign(x) * log1p(|x|))
+  log_transform: true
+
+  # AUG ALIGNED with finetuning (h03 / monitor template)
+  white_noise_std: 0.8
+  constant_offset_std: 0.2
+  gaussian_smooth_std: 2.0
+  gaussian_smooth_kernel_size: 11
+
+  num_workers: 0
+  pin_memory: true
+  min_subject_hours: 0.1
+
+# ---- Model (BIT Table 10) ----
+model:
+  embed_dim: 384
+  n_heads: 6
+  head_dim: 512
+  depth: 7
+  ff_dim: null
+  patch_size: 5
+  dropout: 0.3
+  attn_dropout: 0.5
+  bidirectional: true
+  positional_encoding: rope
+  mask_ratio: 0.5
+  max_mask_span: 15
+
+# ---- Training ----
+training:
+  optimizer: adamw
+  lr: 1.0e-3
+  weight_decay: 0.1
+  n_epochs: 200
+  grad_clip: 10.0
+  lr_scheduler: cosine
+  warmup_epochs: 20
+  min_lr: 1.0e-6
+  save_every_epochs: 20
+  checkpoint_dir: ${CHECKPOINT_DIR}/ssl_v2_somatosensory_aug_aligned
+  resume_from: null
+  val_every_epochs: 5
+  use_amp: true
+
+# ---- Logging ----
+wandb:
+  enabled: true
+  project: brain2text
+  group: ssl_pretrain_v2
+  run_name: ssl_v2_somatosensory_aug_aligned
+
+gpu: 0

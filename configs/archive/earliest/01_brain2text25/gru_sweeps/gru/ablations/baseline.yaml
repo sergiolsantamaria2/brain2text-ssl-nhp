@@ -1,0 +1,23 @@
+num_training_batches: 20000
+
+lr_scheduler_type: cosine
+lr_max: 0.0040
+lr_min: 0.0001333
+lr_decay_steps: ${num_training_batches}
+lr_warmup_steps: 500
+
+lr_max_day: 0.00133
+lr_min_day: 0.0001333
+lr_decay_steps_day: ${num_training_batches}
+lr_warmup_steps_day: 500
+
+weight_decay: 0.00001
+
+output_dir: trained_models/ablations/baseline
+checkpoint_dir: ${output_dir}/checkpoint
+
+wandb:
+  enabled: true
+  group: ablations
+  run_name: baseline
+  tags: ["ablation", "baseline"]

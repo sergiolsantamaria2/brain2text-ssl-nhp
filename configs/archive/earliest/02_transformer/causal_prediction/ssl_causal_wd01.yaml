@@ -1,0 +1,77 @@
+# SSL Pretrain — Causal Multi-Step Prediction (WD=0.1)
+# Compare with ssl_pretrain_wd01.yaml (masked reconstruction)
+
+ssl_objective: causal  # "masked" (default) or "causal"
+
+# ---- Data (IDENTICAL to masked version for fair comparison) ----
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_pretrain
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true
+
+  window_bins: 500
+  patch_size: 5
+  min_session_bins: 100
+
+  batch_size: 64
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+
+  white_noise_std: 0.2
+  constant_offset_std: 0.05
+  gaussian_smooth_std: 2.0
+  gaussian_smooth_kernel_size: 11
+
+  num_workers: 0
+  pin_memory: true
+  min_subject_hours: 0.1
+
+# ---- Model (same transformer, causal attention) ----
+model:
+  embed_dim: 384
+  n_heads: 6
+  head_dim: 512
+  depth: 7
+  ff_dim: null
+  patch_size: 5
+  dropout: 0.3
+  attn_dropout: 0.5
+
+  # Causal prediction params (replaces mask_ratio/max_mask_span)
+  n_predict_steps: 3  # Predict 3 future patches (300ms)
+
+  # Ignored for causal but kept for config compatibility
+  mask_ratio: 0.0
+  max_mask_span: 0
+
+# ---- Training (IDENTICAL to masked for fair comparison) ----
+training:
+  optimizer: adamw
+  lr: 1.0e-3
+  weight_decay: 0.1
+  n_epochs: 400
+  grad_clip: 10.0
+
+  lr_scheduler: cosine
+  warmup_epochs: 20
+  min_lr: 1.0e-6
+
+  save_every_epochs: 20
+  checkpoint_dir: ${CHECKPOINT_DIR}/ssl_causal_wd01
+  resume_from: null
+
+  val_every_epochs: 5
+  val_metric: r2
+
+  use_amp: true
+
+# ---- Logging ----
+wandb:
+  enabled: true
+  project: brain2text
+  group: ssl_causal
+  run_name: ssl_causal_wd01_n3
+
+gpu: 0

@@ -1,0 +1,19 @@
+output_dir: ${oc.env:JOB_OUT_DIR,${OUTPUT_DIR}/archive}/sweep_normalization_10k/norm20_data_batch_zscore
+checkpoint_dir: ${output_dir}/checkpoint
+
+num_training_batches: 10000
+seed: 10
+
+
+wandb:
+  enabled: true
+  project: brain2text
+  group: gru_normalization
+  run_name: norm20_data_batch_zscore_seed10_10k
+  tags: ["norm_sweep", "data", "batch_zscore", "seed10", "10k"]
+
+dataset:
+  data_transforms:
+    feature_norm: "batch_zscore"
+    feature_norm_eps: 1e-5
+  seed: 10

@@ -1,0 +1,77 @@
+# Phase C1 — Stage 2: AR Binary SSL on Somatosensory, warm-started from
+# Stage 1's FT encoder (NOT random init).
+# =====================================================================
+# Identical to configs/experiments/08_ssl_pretraining_study/ar_binary_soma.yaml
+# (the winning SSL recipe) EXCEPT:
+#   - n_epochs: 400 directly (no 200→400 staged warm restart). Cosine from epoch 0.
+#   - checkpoint_dir: NEW path (phase_c1_212/ssl_from_ft) so we never resume the
+#     pre-existing ar_binary_soma run.
+#   - training.init_from_ft must be set externally (sbatch resolves Stage 1's
+#     final_checkpoint_batch_* and passes --init_from_ft <path> at launch).
+#
+# LR is the SSL-original (1e-3) per spec — we don't lower it on this first run.
+# Risk: 20 warmup epochs at 1e-3 may overwrite the FT-pretrained blocks. The
+# Stage 2 smoke test (5 epochs) is the gate: if loss does not drop or diverges,
+# stop and lower LR (3e-5 or longer warmup) before the full launch.
+
+ssl_objective: ar_binary
+
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_ablation/somatosensory
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true
+
+  window_bins: 500
+  patch_size: 5
+  min_session_bins: 100
+
+  batch_size: 64
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+
+  log_transform: false
+  white_noise_std: 0.0
+  constant_offset_std: 0.0
+  gaussian_smooth_std: 0.0
+  gaussian_smooth_kernel_size: 11
+
+  num_workers: 0
+  pin_memory: true
+  min_subject_hours: 0.1
+
+model:
+  embed_dim: 384
+  n_heads: 6
+  head_dim: 512
+  depth: 7
+  ff_dim: null
+  patch_size: 5
+  dropout: 0.3
+  attn_dropout: 0.5
+  channel_mask_ratio: 0.3
+
+training:
+  optimizer: adamw
+  lr: 1.0e-3
+  weight_decay: 0.1
+  n_epochs: 400
+  grad_clip: 10.0
+  lr_scheduler: cosine
+  warmup_epochs: 20
+  min_lr: 1.0e-6
+  save_every_epochs: 20
+  checkpoint_dir: ${CHECKPOINT_DIR}/phase_c1_212/ssl_from_ft
+  resume_from: null
+  init_from_ft: null   # set by sbatch via --init_from_ft <Stage 1 final ckpt>
+  val_every_epochs: 5
+  use_amp: true
+
+wandb:
+  enabled: true
+  project: brain2text
+  group: phase_c1_212_ssl
+  run_name: phase_c1_212_ssl_from_ft_initial
+
+gpu: 0

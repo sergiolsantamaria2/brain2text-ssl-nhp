@@ -1,0 +1,75 @@
+# SSL Study — AR Binary BIDIR Dual on Fine Motor (~68h, motor cortex)
+# =====================================================================
+# Replica del grid de Técnica 4 (causal+dual) con la variante 4-ab2
+# (bidir+dual). Mismas HPs que ar_binary_fine_motor.yaml, solo cambia
+# ssl_objective + paths/wandb.
+#
+# Usage:
+# Usage: python scripts/pretrain.py --config <this-file>
+
+# ---- SSL Objective ----
+ssl_objective: ar_binary_bidir
+
+# ---- Data ----
+data:
+  nhp_pretrain_dir: ${DATA_DIR}/nhp_ablation/fine_motor
+  human_data_dir: ${DATA_DIR}/hdf5_data_final
+  include_human: false
+  human_use_only_tx: true
+
+  window_bins: 500
+  patch_size: 5
+  min_session_bins: 100
+
+  batch_size: 64
+  n_batches_per_epoch: 1000
+  val_fraction: 0.1
+  seed: 42
+
+  log_transform: false
+
+  white_noise_std: 0.0
+  constant_offset_std: 0.0
+  gaussian_smooth_std: 0.0
+  gaussian_smooth_kernel_size: 11
+
+  num_workers: 0
+  pin_memory: true
+  min_subject_hours: 0.1
+
+# ---- Model (idéntico al resto del grid bidir+dual) ----
+model:
+  embed_dim: 384
+  n_heads: 6
+  head_dim: 512
+  depth: 7
+  ff_dim: null
+  patch_size: 5
+  dropout: 0.3
+  attn_dropout: 0.5
+  channel_mask_ratio: 0.3
+
+# ---- Training (medium dataset → intermediate HPs, igual que T4 fine_motor) ----
+training:
+  optimizer: adamw
+  lr: 7.0e-4
+  weight_decay: 0.01
+  n_epochs: 200
+  grad_clip: 10.0
+  lr_scheduler: cosine
+  warmup_epochs: 20
+  min_lr: 1.0e-6
+  save_every_epochs: 50
+  checkpoint_dir: ${CHECKPOINT_DIR}/ssl_study/ar_binary_bidir_fine_motor
+  resume_from: null
+  val_every_epochs: 5
+  use_amp: true
+
+# ---- Logging ----
+wandb:
+  enabled: true
+  project: brain2text
+  group: ssl_study_ar_binary_bidir_fine_motor
+  run_name: ssl_study_ar_binary_bidir_fine_motor
+
+gpu: 0

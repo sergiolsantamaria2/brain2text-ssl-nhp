@@ -1,0 +1,11 @@
+output_dir: ${OUTPUT_DIR}/ssl_ablation/gru_per_focused
+checkpoint_dir: ${output_dir}/checkpoint
+
+wandb:
+  enabled: true
+  project: brain2text
+  run_name: gru
+  group: gru_with_ssl_features
+  tags: ["gru", "per_only", "no_diphones"]
+
+  batches_per_val_step: 2000

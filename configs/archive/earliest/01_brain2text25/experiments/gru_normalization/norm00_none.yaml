@@ -1,0 +1,20 @@
+output_dir: ${oc.env:JOB_OUT_DIR,${OUTPUT_DIR}/archive}/sweep_normalization_10k/norm00_none
+checkpoint_dir: ${output_dir}/checkpoint
+
+num_training_batches: 10000
+seed: 10
+dataset:
+  seed: 10
+  data_transforms:
+    feature_norm: "none"
+
+wandb:
+  enabled: true
+  project: brain2text
+  group: gru_normalization
+  run_name: norm00_none_seed10_10k
+  tags: ["norm_sweep", "none", "seed10", "10k"]
+
+model:
+  head_type: "none"
+

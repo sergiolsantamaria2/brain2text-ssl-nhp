@@ -1,0 +1,3 @@
+# AdamW epsilon: base config uses 0.1 (GRU-optimized), transformers need standard value
+# Augmentation removed from here — controlled per-experiment config (Phase A-C sweep)
+epsilon: 1e-8
