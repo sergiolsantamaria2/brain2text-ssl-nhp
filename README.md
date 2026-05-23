@@ -10,6 +10,8 @@
 
 ## Summary
 
+> Master's thesis at TU Wien, supervised by Prof. Guillaume Bellec.
+
 The project has two halves: a **competition entry** that produced a strong human-speech-decoding baseline, and a **Master's thesis** that extended it through cross-species self-supervised pretraining.
 
 - **Brain-to-Text '25 competition (encoder side).** Optimized the official 5-layer GRU baseline through learning-rate schedule, speckled masking, training-length and hyperparameter sweeps, bringing T15 validation PER from **≈0.110 → 0.0978** — within the range of leading public submissions, and the encoder against which every later experiment in the thesis is measured.
