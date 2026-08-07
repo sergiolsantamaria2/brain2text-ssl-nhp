@@ -1,13 +1,16 @@
-# Pretrain monitoring — quick finetuning (50k batches) from SSL checkpoint
-# ========================================================================
-# Template config. Used by scripts/run_pretrain_monitor.py which overrides:
-#   model.ssl_checkpoint  — path to specific pretraining checkpoint
-#   wandb.run_name        — monitor_{dataset}_{epoch}
-#   wandb.group           — pretrain_monitor
+# Pretrain monitoring — short finetuning (30k batches) from an SSL checkpoint
+# ==========================================================================
+# Template config for the monitoring protocol (docs/architecture.md §7).
+# Pretraining loss does not predict downstream PER, so every saved SSL
+# checkpoint is briefly finetuned on T15 and ranked by the validation PER it
+# reaches. Override per checkpoint:
+#   model.ssl_checkpoint  — path to the pretraining checkpoint under test
 #   output_dir            — per-checkpoint output directory
+#   wandb.run_name        — monitor_{dataset}_{epoch}
 #
-# Based on h03 (best TFS: PER=0.0992) but with 50k batches instead of 200k.
-# Purpose: NOT to get best PER, but to get COMPARABLE PER across checkpoints.
+# Same finetuning recipe as the TFS baseline, at 30k batches instead of 200k.
+# Purpose: NOT to reach the best PER, but a COMPARABLE PER across checkpoints.
+# See examples/reproduce_headline.md §2 for the driving loop.
 output_dir: ${oc.env:JOB_OUT_DIR,trained_models/pretrain_monitor/default}
 checkpoint_dir: ${output_dir}/checkpoint
 
@@ -45,7 +48,7 @@ epsilon: 1e-8
 weight_decay: 0.0005
 weight_decay_day: 0
 
-num_training_batches: 50000
+num_training_batches: 30000
 lr_scheduler_type: cosine
 lr_max: 0.0003
 lr_max_day: 0.0003

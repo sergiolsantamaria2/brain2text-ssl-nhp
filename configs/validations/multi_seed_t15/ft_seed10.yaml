@@ -1,14 +1,21 @@
-# Finetuning — SSL v2 Somatosensory checkpoint → T15 phoneme decoding
-# ====================================================================
-# Based on h03 (best TFS: PER=0.0992) with SSL pretrained weights.
-# Checkpoint: somatosensory only (~10h, Area 2/S1, non-motor).
-# KEY TEST: Does S1 (10h) match All-NHP (200h) on the strong h03 baseline?
+# Multi-seed validation — AR-Binary (causal) somatosensory SSL -> T15, seed=10
+# =============================================================================
+# Finetunes the headline pretraining checkpoint (AR-Binary causal, ~10 h macaque
+# Area 2 / S1, epoch 400) on T15. Together with seeds 42 and 123 this is the
+# multi-seed reproducibility check of docs/results.md §6.1: mean validation PER
+# 0.0925 +/- 0.0005 at the 250k-batch horizon set below.
 #
-# Launch AFTER ssl_v2_somatosensory_log pretraining completes.
+# Note that these three runs vary the seed of the SSL arm only; the seed-paired
+# SSL-vs-control comparison is the T12 experiment under
+# configs/validations/cross_participant_t12/.
+#
+# For the 0.0887 headline, override the horizon:
+#   --set num_training_batches=400000
 output_dir: ${oc.env:JOB_OUT_DIR,trained_models/ssl_v2/ft_somatosensory}
 checkpoint_dir: ${output_dir}/checkpoint
 
 use_ema: false
+seed: 10
 
 model:
   decoder_type: transformer
@@ -21,7 +28,7 @@ model:
   rnn_dropout: 0.2
   patch_size: 5
   patch_stride: 5
-  ssl_checkpoint: ${CHECKPOINT_DIR}/ssl_v2_somatosensory_log/best.pt
+  ssl_checkpoint: ${CHECKPOINT_DIR}/ssl_study/ar_binary_soma/epoch_0400.pt
   head_type: resffn
   head_num_blocks: 1
   head_norm: layernorm
@@ -42,7 +49,7 @@ epsilon: 1e-8
 weight_decay: 0.0005
 weight_decay_day: 0
 
-num_training_batches: 200000
+num_training_batches: 250000
 lr_scheduler_type: cosine
 lr_max: 0.0003
 lr_max_day: 0.0003

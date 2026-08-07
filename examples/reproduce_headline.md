@@ -63,53 +63,66 @@ other NHP datasets via `--datasets 000070 000121 000128 000129 000688 000941 001
 
 ## 2. SSL pretraining
 
-Pretrain the transformer with the AR-Binary (causal) objective for 400
-epochs on the somatosensory partition:
+Pretrain the transformer with the AR-Binary (causal) objective on the
+somatosensory partition. This runs in **two stages**: the base config stops at
+epoch 200, and the `_extended` config carries the same run on to epoch 400.
+Both write to the same `checkpoint_dir`, so the second invocation resumes from
+epoch 200 rather than starting over.
 
 ```bash
-python scripts/pretrain.py \
-    --config configs/ssl_study/ar_binary_causal_soma.yaml
+python scripts/pretrain.py --config configs/ssl_study/ar_binary_causal_soma.yaml
+python scripts/pretrain.py --config configs/ssl_study/ar_binary_causal_soma_extended.yaml
 ```
 
-By default the run saves a checkpoint every 20 epochs to
-`${CHECKPOINT_DIR}/ssl_study/ar_binary_soma/`. The checkpoint to promote to
-the full finetuning is `epoch_400.pt`.
+The run saves a checkpoint every 20 epochs to
+`${CHECKPOINT_DIR}/ssl_study/ar_binary_soma/`, named with a zero-padded epoch
+number. The checkpoint to promote to the full finetuning is **`epoch_0400.pt`**.
 
 ### Optional: pretraining monitoring
 
-The monitoring protocol (architecture.md §7) runs a short 30k-batch
-finetuning of each saved checkpoint on T15 and reports the best monitoring
-PER:
+The monitoring protocol (architecture.md §7) runs a short 30k-batch finetuning
+of each saved checkpoint on T15 and reports the resulting validation PER. The
+template config carries the recipe; the checkpoint under test is supplied per
+run:
 
 ```bash
-# Per-checkpoint finetuning configs are under configs/validations/pretrain_monitor/
-for cfg in configs/validations/pretrain_monitor/ft_200k/*.yaml; do
-    python scripts/finetune.py --config "$cfg" \
-        --set model.ssl_checkpoint=${CHECKPOINT_DIR}/ssl_study/ar_binary_soma/epoch_${EPOCH}.pt
+SSL_DIR=${CHECKPOINT_DIR}/ssl_study/ar_binary_soma
+
+for ckpt in "${SSL_DIR}"/epoch_*.pt; do
+    epoch=$(basename "$ckpt" .pt)          # e.g. epoch_0180
+    python scripts/finetune.py \
+        --config configs/validations/pretrain_monitor/ft_monitor_template.yaml \
+        --set model.ssl_checkpoint="$ckpt" \
+        --set output_dir=${OUTPUT_DIR}/monitor/${epoch}
 done
 ```
 
-For the headline run, the best monitoring PER is reached at epoch 400.
+The checkpoint with the best monitoring PER is the one promoted. For the
+headline run that is epoch 400.
 
 
 ## 3. Finetuning on T15
 
 Promote the best monitoring checkpoint (epoch 400) to a full 400,000-batch
-finetuning:
+finetuning. The multi-seed configs already point `model.ssl_checkpoint` at
+`${CHECKPOINT_DIR}/ssl_study/ar_binary_soma/epoch_0400.pt` and default to the
+250k-batch horizon used for the multi-seed validation, so only the batch count
+needs overriding:
 
 ```bash
 python scripts/finetune.py \
     --config configs/validations/multi_seed_t15/ft_seed10.yaml \
-    --set model.ssl_checkpoint=${CHECKPOINT_DIR}/ssl_study/ar_binary_soma/epoch_400.pt \
     --set num_training_batches=400000
 ```
 
 Final validation PER should reach **0.0887 ± seed noise** by the end of the
 schedule — a **6.5 % relative improvement** over a no-SSL transformer
-trained at the same 400k-batch budget (PER 0.0949). The multi-seed-FT250k
-mean across seeds 10/42/123 is **0.0925 ± 0.0005** (the 250k horizon is
-shorter than 400k; the headline 0.0887 is the seed-10 number at 400k batches
-— see [docs/results.md §4](../docs/results.md) and §5.1).
+trained at the same 400k-batch budget (PER 0.0949). Running the same three
+configs without the override reproduces the multi-seed validation at 250k
+batches: **0.0925 ± 0.0005** across seeds 10/42/123 (the 250k horizon is
+shorter than 400k, where the validation curve is still descending; the
+headline 0.0887 is the seed-10 number at 400k — see
+[docs/results.md §5](../docs/results.md) and §6.1).
 
 
 ## 4. Evaluation
@@ -159,7 +172,7 @@ relative gap.
   release are both static; both were downloaded once and not updated during
   the project. The NHP-side hours reported (~10 h for somatosensory) are
   after the session-quality filtering documented in
-  [src/brain2text/data/preprocess_nhp.py](../scripts/preprocess_nhp.py)
+  [scripts/preprocess_nhp.py](../scripts/preprocess_nhp.py)
   (minimum 30-second session duration; minimum 10 total spikes per channel
   scaled by session length).
 - **Optimizer non-determinism.** AdamW with fused implementation on CUDA
