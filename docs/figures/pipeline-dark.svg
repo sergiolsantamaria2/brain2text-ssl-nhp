@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500" role="img" aria-label="Two-column diagram. Left: AR-Binary self-supervised pretraining on macaque threshold crossings, binarized with 30 percent of channels hidden, through a subject-specific patch embedding into seven shared transformer blocks and a binary head predicting visible channels at the next step and hidden channels at the current step under BCE. Right: finetuning on human data with a day-specific affine layer, a reinitialized patch embedding, the same seven transformer blocks loaded with pretrained weights, and a reinitialized linear head trained with CTC. Only the seven blocks and the final LayerNorm transfer between the two stages.">
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .h    { fill: #e6edf3; font-size: 13.5px; font-weight: 700; }
+    .hs   { fill: #8b949e; font-size: 11.5px; }
+    .t    { fill: #e6edf3; font-size: 12px; font-weight: 500; }
+    .t-hl { fill: #58a6ff; font-size: 12.5px; font-weight: 700; }
+    .s    { fill: #8b949e; font-size: 10.5px; }
+    .box  { fill: #161b22; stroke: #30363d; stroke-width: 1; }
+    .dropped { stroke-dasharray: 5 3; }
+    .shared { fill: #121d2f; stroke: #1f6feb; stroke-width: 1.6; }
+    .arw  { stroke: #6e7681; stroke-width: 1.4; fill: none; }
+    .xfer { stroke: #58a6ff; stroke-width: 2; fill: none; }
+    .xt   { fill: #58a6ff; font-size: 11px; font-weight: 700; }
+    .note { fill: #f0883e; font-size: 10.5px; font-weight: 600; }
+    .foot { fill: #8b949e; font-size: 11px; }
+    .mono { fill: #e6edf3; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; }
+    .monos { fill: #8b949e; font-size: 10.5px; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#6e7681"/>
+    </marker>
+    <marker id="xh" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#58a6ff"/>
+    </marker>
+  </defs>
+  <text class="h" x="26.0" y="30">1 · Self-supervised pretraining — macaque only</text>
+  <text class="hs" x="26.0" y="48">AR-Binary (causal) · no labels, no human data</text>
+  <text class="h" x="454.0" y="30">2 · Supervised finetuning — human</text>
+  <text class="hs" x="454.0" y="48">CTC on attempted speech · measured by PER</text>
+  <g>
+    <rect class="box" x="26.0" y="66" width="320.0" height="46" rx="6"/>
+    <text class="t" x="186.0" y="85.0" text-anchor="middle">Macaque threshold crossings</text>
+    <text class="s" x="186.0" y="102.0" text-anchor="middle">~10 h, Area 2 / S1 · 20 ms bins</text>
+    <rect class="box" x="26.0" y="124" width="320.0" height="46" rx="6"/>
+    <text class="t" x="186.0" y="143.0" text-anchor="middle">Binarize (x &gt; 0), hide 30 % of channels</text>
+    <text class="s" x="186.0" y="160.0" text-anchor="middle">spike / no spike per channel per bin</text>
+    <rect class="box dropped" x="26.0" y="182" width="320.0" height="46" rx="6"/>
+    <text class="t" x="186.0" y="201.0" text-anchor="middle">Subject-specific patch embedding</text>
+    <text class="s" x="186.0" y="218.0" text-anchor="middle">5 bins (100 ms) → 384 · one per macaque</text>
+    <rect class="shared" x="26.0" y="240" width="320.0" height="56" rx="6"/>
+    <text class="t-hl" x="186.0" y="264.0" text-anchor="middle">Transformer blocks × 7 + final LayerNorm</text>
+    <text class="s" x="186.0" y="281.0" text-anchor="middle">causal self-attention · RoPE</text>
+    <rect class="box dropped" x="26.0" y="308" width="320.0" height="74" rx="6"/>
+    <text class="t" x="186.0" y="329" text-anchor="middle">Subject-specific binary head</text>
+    <rect class="box" x="26.0" y="394" width="320.0" height="46" rx="6"/>
+    <text class="t" x="186.0" y="421.0" text-anchor="middle">BCE loss (sum of the two terms)</text>
+    <line class="arw" x1="186.0" y1="112" x2="186.0" y2="118" marker-end="url(#ah)"/>
+    <line class="arw" x1="186.0" y1="170" x2="186.0" y2="176" marker-end="url(#ah)"/>
+    <line class="arw" x1="186.0" y1="228" x2="186.0" y2="234" marker-end="url(#ah)"/>
+    <line class="arw" x1="186.0" y1="296" x2="186.0" y2="302" marker-end="url(#ah)"/>
+    <line class="arw" x1="186.0" y1="382" x2="186.0" y2="388" marker-end="url(#ah)"/>
+  </g>
+  <g>
+    <rect class="box" x="454.0" y="66" width="320.0" height="46" rx="6"/>
+    <text class="t" x="614.0" y="85.0" text-anchor="middle">Human threshold crossings + spike-band power</text>
+    <text class="s" x="614.0" y="102.0" text-anchor="middle">T15 or T12 · 256 TX + 256 SBP · 20 ms bins</text>
+    <rect class="box" x="454.0" y="124" width="320.0" height="46" rx="6"/>
+    <text class="t" x="614.0" y="143.0" text-anchor="middle">log(1 + x), day-specific affine 512 → 512</text>
+    <text class="s" x="614.0" y="160.0" text-anchor="middle">one per recording session</text>
+    <rect class="box" x="454.0" y="182" width="320.0" height="46" rx="6"/>
+    <text class="t" x="614.0" y="201.0" text-anchor="middle">Patch embedding — reinitialized</text>
+    <text class="s" x="614.0" y="218.0" text-anchor="middle">5 bins (100 ms) → 384</text>
+    <rect class="shared" x="454.0" y="240" width="320.0" height="56" rx="6"/>
+    <text class="t-hl" x="614.0" y="264.0" text-anchor="middle">Transformer blocks × 7 + final LayerNorm</text>
+    <text class="s" x="614.0" y="281.0" text-anchor="middle">pretrained weights loaded · bidirectional</text>
+    <rect class="box" x="454.0" y="308" width="320.0" height="74" rx="6"/>
+    <text class="t" x="614.0" y="341.0" text-anchor="middle">Linear head → 41 classes — reinitialized</text>
+    <text class="s" x="614.0" y="358.0" text-anchor="middle">40 ARPABET phonemes + CTC blank</text>
+    <rect class="box" x="454.0" y="394" width="320.0" height="46" rx="6"/>
+    <text class="t" x="614.0" y="421.0" text-anchor="middle">CTC loss → phoneme error rate</text>
+    <line class="arw" x1="614.0" y1="112" x2="614.0" y2="118" marker-end="url(#ah)"/>
+    <line class="arw" x1="614.0" y1="170" x2="614.0" y2="176" marker-end="url(#ah)"/>
+    <line class="arw" x1="614.0" y1="228" x2="614.0" y2="234" marker-end="url(#ah)"/>
+    <line class="arw" x1="614.0" y1="296" x2="614.0" y2="302" marker-end="url(#ah)"/>
+    <line class="arw" x1="614.0" y1="382" x2="614.0" y2="388" marker-end="url(#ah)"/>
+  </g>
+  <g>
+    <text class="mono" x="42.0" y="354">ar_visible</text>
+    <text class="monos" x="120.0" y="354">→ visible channels at t+1</text>
+    <text class="mono" x="42.0" y="374">ar_hidden</text>
+    <text class="monos" x="120.0" y="374">→ hidden channels at t</text>
+  </g>
+  <line class="xfer" x1="352.0" y1="268" x2="446.0" y2="268" marker-end="url(#xh)"/>
+  <text class="xt" x="400.0" y="258" text-anchor="middle">transfer</text>
+  <text class="note" x="26.0" y="466">Dashed = discarded when pretraining ends. Only the 7 blocks and the final LayerNorm cross over.</text>
+  <text class="foot" x="774.0" y="466" text-anchor="end">Thesis §8.1–8.2</text>
+</svg>
