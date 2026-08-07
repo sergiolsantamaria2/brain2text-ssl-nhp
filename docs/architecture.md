@@ -107,7 +107,9 @@ GRU baseline at PER = 0.0976:
    additive white noise std 0.2 and a per-trial constant offset std 0.05. At
    transformer-level augmentation the encoder underfits on T15-only data; we
    use the RNN-level values from BIT's own RNN baseline (white noise std 0.8,
-   constant offset std 0.2) instead.
+   constant offset std 0.2) instead. Both are applied to the input *before* the
+   log-transform. In addition, Gaussian smoothing across time of width 2.0 is
+   applied to both the training and the validation inputs.
 3. **Optimizer schedule.** AdamW with a cosine schedule (linear warmup, decay
    to a small minimum). A manual sweep within the same ranges BIT searched
    converged on `lr = 3e-4`, `weight_decay = 5e-4`, batch size 32, around
@@ -120,6 +122,15 @@ With these three additions the transformer reaches a validation PER of
 of Chapter 8 are built on. When retrained under the longer 400,000-batch
 schedule used as the no-SSL control for the headline comparison of Chapter 8,
 the same architecture reaches a final PER of 0.0949.
+
+The two encoders are at comparable scale, which matters for the architectural
+argument of Section 3 above: the transformer holds ≈43 M shared parameters (the
+seven blocks plus the patch embedding and final norm) and ≈12 M more across the
+45 day-specific input layers, ~55 M in total; the GRU holds ≈32 M in its shared
+recurrent stack and the same ≈12 M in its day-specific layers, ~44 M in total.
+What distinguishes them for the SSL experiments is **where** those parameters
+live — in shared self-attention recomputed at every pass, or in a persistent
+recurrent state — not how many there are.
 
 Implementation: [src/brain2text/models/transformer.py](../src/brain2text/models/transformer.py).
 Config: [configs/baselines/transformer_from_scratch.yaml](../configs/baselines/transformer_from_scratch.yaml).
@@ -179,8 +190,9 @@ finetuning, the two variants reach essentially equal PER (causal 0.0887,
 bidirectional 0.0892) and either would serve as the headline; we adopt the
 causal variant because it reaches the marginally lower number. A separate
 hidden-only check — keeping only the cross-channel `ar_hidden` term — confirms
-that the dual structure is essential: removing the temporal term collapses
-the encoder to monitoring PER 0.568.
+that the dual structure is essential: removing the temporal term collapses the
+downstream finetuning, so the temporal half of the loss is doing real work and
+is not redundant with the cross-channel half.
 
 Implementation: [src/brain2text/ssl/ar_binary_pretrain.py](../src/brain2text/ssl/ar_binary_pretrain.py).
 Bidirectional variant: [ar_binary_bidir_pretrain.py](../src/brain2text/ssl/ar_binary_bidir_pretrain.py).
@@ -189,6 +201,11 @@ Headline config: [configs/ssl_study/ar_binary_causal_soma.yaml](../configs/ssl_s
 
 
 ## 6. Pretrain → finetune pipeline
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="figures/pipeline-dark.svg">
+  <img alt="Two-column diagram. Left: AR-Binary self-supervised pretraining on macaque threshold crossings, binarized with 30 percent of channels hidden, through a subject-specific patch embedding into seven shared transformer blocks and a binary head predicting visible channels at the next step and hidden channels at the current step under BCE. Right: finetuning on human data with a day-specific affine layer, a reinitialized patch embedding, the same seven transformer blocks loaded with pretrained weights, and a reinitialized linear head trained with CTC. Only the seven blocks and the final LayerNorm transfer between the two stages." src="figures/pipeline-light.svg">
+</picture>
 
 Three architectural elements distinguish the pretraining stage from the
 finetuning stage:
@@ -237,12 +254,13 @@ finetuning, which produces the headline result.
 The 30k-batch monitoring horizon is short enough to be cheap (about one
 GPU-day per checkpoint) and long enough to discriminate clearly between
 "this pretraining helps" and "this pretraining is at or below the no-SSL
-baseline". In Chapter 8, the monitoring trajectory of the headline
-AR-Binary (causal) somatosensory run swings between catastrophic
-checkpoints (PER 0.4–0.6) and useful ones (PER below 0.124) at almost
-every other saved epoch, while the pretraining loss decreases monotonically
-throughout — only the monitoring PER identifies which checkpoint to
-promote.
+baseline". The example trajectory in Chapter 6 of the thesis (Fig. 6.4) makes
+the case: early in that run the monitoring PER swings between catastrophic
+checkpoints, well above the no-SSL control, and useful ones at or below it,
+stabilising only later in pretraining — while the pretraining loss for the
+same run decreases monotonically throughout. The loss neither warns about the
+catastrophic checkpoints nor indicates which epoch yields the best downstream
+PER; only the monitoring PER does.
 
 This protocol is itself a methodological contribution. It is introduced in
 Chapter 6 of the thesis (the GRU SSL experiments) and reused throughout
@@ -278,14 +296,25 @@ all session pairs (820 for the within-T15 analysis, 984 for the
 cross-participant T12↔T15 analysis), this scalar is the representational
 metric we report.
 
-Two reference values complete the analysis:
+A raw `ρ̄_1:4` is not interpretable on its own, so two reference values complete
+the analysis:
 
-- A **shuffled-temporal control** that destroys true cross-session
-  alignment while preserving marginal statistics, and defines the floor
-  of the metric.
-- A **raw-input baseline** that applies PCA + CCA directly to the
-  512-dimensional spike features, characterizing the alignment any
-  encoder inherits "for free" from the input statistics.
+- A **shuffled floor.** One of the two matrices has its time axis **circularly
+  shifted** before CCA. The shift breaks the correspondence between the two
+  sessions while leaving each session's own statistics untouched — the same
+  marginal distribution and, crucially, the same temporal autocorrelation, since
+  a circular shift moves the trajectory in time rather than scrambling it. This
+  makes it a *stricter* control than an i.i.d. permutation of timepoints, which
+  would destroy the autocorrelation as well and return an artificially low
+  number. What the floor measures is the alignment two genuinely unrelated
+  sessions reach by chance at this dimensionality and sample size.
+- A **raw-input baseline** that applies the same PCA-then-CCA procedure directly
+  to the 512-dimensional spike features, with no encoder in between. Two
+  sessions already share structure before any network touches them — the arrays
+  sit in the same place and the features are z-scored per channel and day — and
+  an untrained network passes much of that through intact. The baseline
+  quantifies it, and turns the useful question into a directional one: does
+  training move the encoder above this level, or below it?
 
 Implementation: [src/brain2text/evaluation/cca.py](../src/brain2text/evaluation/cca.py).
 CLI: `scripts/evaluate_cca.py` (within-T15) and
@@ -298,8 +327,10 @@ CLI: `scripts/evaluate_cca.py` (within-T15) and
   neuroprosthesis.* NEJM.
 - Chowdhury, R. H., Glaser, J. I., Miller, L. E. (2020). *Area 2 of primary
   somatosensory cortex encodes kinematics of the whole arm.* eLife.
-- Gallego, J. A. et al. (2018). *Long-term stability of cortical population
-  dynamics underlying consistent behavior.* bioRxiv 447441v3.
+- Gallego, J. A. et al. (2018). *Cortical population activity within a preserved
+  neural manifold underlies multiple motor behaviors.* Nature Communications 9, 4233.
+- Gallego, J. A. et al. (2020). *Long-term stability of cortical population
+  dynamics underlying consistent behavior.* Nature Neuroscience 23(2), 260–270.
 - Graves, A., Fernández, S., Gomez, F., Schmidhuber, J. (2006). *Connectionist
   Temporal Classification.* ICML.
 - Su, J. et al. (2024). *RoFormer: Enhanced transformer with rotary position
@@ -307,7 +338,7 @@ CLI: `scripts/evaluate_cca.py` (within-T15) and
 - Vaswani, A. et al. (2017). *Attention is all you need.* NeurIPS.
 - Willett, F. R. et al. (2023). *A high-performance speech neuroprosthesis.*
   Nature.
-- Zhang, S., He, B. et al. (2025). *BIT: Brain-to-Text via pretraining on
-  intracortical recordings.* Preprint.
-- Zhu, R.-J. et al. (2023). *SpikeGPT: Generative pretrained language model
-  with spiking neural networks.* Preprint.
+- Zhang, Y., He, L. et al. (2025). *Decoding inner speech with an end-to-end
+  brain-to-text neural interface.* arXiv:2511.21740.
+- Zhu, R.-J. et al. (2023). *SpikeGPT: Generative pre-trained language model
+  with spiking neural networks.* arXiv:2302.13939.
